@@ -9,15 +9,15 @@ void CRSF::begin(){
   			1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023};
   	port.begin(SERIAL_BAUDRATE);
 
-
+  //initial data;
 	memcpy(crsfData,loc_crsfData,CRSF_PACKET_SIZE);
 	memcpy(channels,loc_channels,CRSF_MAX_CHANNEL);
-	memcpy(servos,loc_servos,16);
 	failsafe_status = CRSF_SIGNAL_OK;
 	crsf_passthrough = 1;
 	toChannels = 0;
-	bufferIndex=0;
+	bufferIndex = 0;
 	feedState = 0;
+  isDataFrame = 0;
 
 }
 
@@ -182,10 +182,10 @@ void CRSF::FeedLine(void){
   if (port.available() > 26){
     while(port.available() > 0){
       inData = port.read();
-      currentMicros = micros();
+      //currentMicros = micros();
       switch (feedState){
       case 0:
-        if (inData != 0xEE){
+        if (inData != 0xC8){
           while(port.available() > 0){//read the contents of in buffer this should resync the transmission
             inData = port.read();
           }
@@ -206,7 +206,7 @@ void CRSF::FeedLine(void){
         }
         if (bufferIndex == 26){
           feedState = 0;
-          if (inBuffer[0]==0xEE){
+          if (inBuffer[0]==0xC8){
             memcpy(crsfData,inBuffer,26);
             toChannels = 1;
           }
@@ -245,20 +245,57 @@ uint8_t crsf_crc8(const uint8_t *ptr, uint8_t len) {
 }
 
 void CRSF::GetCrsfPacket(void){
+    uint8_t crc;
+    bufferIndex=0;
     while(port.available() > 0){
       inData = port.read();
-      if(bufferIndex==0 && inData!=ADDR_MODULE)
+      if (bufferIndex==0){
+        if(inData == CRSF_ADDRESS_FLIGHT_CONTROLLER){
+          inBuffer[bufferIndex++] = inData;
+          inData = port.read();
+          frameLength = inData;
+          inBuffer[bufferIndex++] = inData;
+        }else{
+          bufferIndex=0;
+        }
+      }else if(bufferIndex >1 && bufferIndex < frameLength + 1){
+          inBuffer[bufferIndex++] = inData;
+      }else if(bufferIndex == frameLength + 1){
+        //calculate received packet crc
+        uint8_t inCrc=inBuffer[CRSF_FRAME_LENGTH-1];
+        uint8_t crc=crsf_crc8(&inBuffer[2],inBuffer[1]-1);
+        //If crc is correct copy buffer data to crsfData
+        if( frameLength==CRSF_FRAME_LENGTH && inBuffer[0]== CRSF_ADDRESS_FLIGHT_CONTROLLER){
+          memcpy(crsfData,inBuffer,CRSF_PACKET_SIZE);
+        }
+        bufferIndex = 0;
+      }
+         // inBuffer[25]=port.available();
+
+    }
+
+     /* if(bufferIndex==0 && inData!=CRSF_ADDRESS_FLIGHT_CONTROLLER)
         continue;
       inBuffer[bufferIndex++] = inData;
+      if (inBuffer[1]==0x18){
+
+   
+
       if(bufferIndex==CRSF_PACKET_SIZE-1){
         uint8_t inCrc=inBuffer[CRSF_PACKET_SIZE-1];
         uint8_t crc=crsf_crc8(&inBuffer[2],CRSF_PACKET_SIZE-3);
-        
-          bufferIndex=0 ;
-          memcpy(crsfData,inBuffer,26);
 
-      }
-   }
+        //if( inBuffer[0]==CRSF_ADDRESS_FLIGHT_CONTROLLER  ){
+          memcpy(crsfData,inBuffer,26);
+        //}
+      bufferIndex=0 ;
+         }
+         else{
+           bufferIndex=0 ;
+         }
+
+      }*/
+   
 }
 
 

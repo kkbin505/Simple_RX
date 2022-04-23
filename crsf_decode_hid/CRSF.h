@@ -46,7 +46,7 @@
 #define RADIO_ADDRESS                  0xEA
 #define ADDR_MODULE                    0xEE  //  Crossfire transmitter
 // Baud ELRS receiver baud 420000 bit/s v2
-#define SERIAL_BAUDRATE 420000
+#define SERIAL_BAUDRATE 115200
 
 //Define channel input limite
 #define CRSF_CHANNEL_MIN 172
@@ -65,21 +65,23 @@
 #define CRSF_PAYLOAD_SIZE_MAX   60
 #define CRSF_PACKET_LENGTH 22
 #define CRSF_PACKET_SIZE  26
-#define CRSF_FRAME_LENGTH 24;   // length of type + payload + crc
+#define CRSF_FRAME_LENGTH 24  // length of type + payload + crc
 
 // internal elrs variables
 #define ELRS_ADDRESS                   0xEE
 #define ADDR_RADIO                     0xEA  //  Radio Transmitter
 #define TYPE_SETTINGS_WRITE            0x2D
-
+#define CRSF_ADDRESS_FLIGHT_CONTROLLER 0xC8
 
 class CRSF
 {
 	public:
+		uint8_t inBuffer[CRSF_PACKET_SIZE];
 		uint8_t crsfData[CRSF_PACKET_SIZE];
 		int16_t channels[CRSF_MAX_CHANNEL];
 		int16_t servos[18];
 		uint8_t  failsafe_status;
+		uint8_t frameLenth;
 		int crsf_passthrough;
 		int toChannels;
 		void begin(void);
@@ -103,11 +105,13 @@ class CRSF
 		uint8_t ch;
 		uint8_t bit_in_channel;
 		uint8_t bit_in_servo;
-		uint8_t inBuffer[25];
+
 		int bufferIndex;
 		uint8_t inData;
 		int feedState;
 		uint32_t currentMicros;
+		int frameLength;
+		int isDataFrame;
 		
 
 };
