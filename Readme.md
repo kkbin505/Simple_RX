@@ -10,6 +10,20 @@ https://github.com/MHeironimus/ArduinoJoystickLibrary
 
 Used for simulator, tested on velocity drone/Tinywhoop Go/VRC Pro, and on Skydievr (android version use otg)
 
+### Wiring
+
+ELRS receiver  -  Arduino Pro Micro
+
+5v  -> 5v
+
+GND -> GND
+
+RX  -> TX
+
+TX  -> RX
+
+
+
 Due to the hardware limitation, the receiver need to work at 115200 baud rate (Default is 420k), the latest elrs configrator support customer baud rate.
 
 ![屏幕截图 2022-04-30 135045](https://user-images.githubusercontent.com/43392862/166093376-be980072-038f-40fe-8a93-302f23605fc6.jpg)
