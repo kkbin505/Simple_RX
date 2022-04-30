@@ -1,7 +1,15 @@
-crsf decode for avr atmega328/32 u4
+CRSF decode library for arduino atmega32u4/328p.
 
-Flash elrs receiver at 115200 baud rate
+Based on arduino SBUS decode, modified to decode crsf protocol from elrs receiver
 
-The CRS is not working correctly, only use for hid only.
+https://github.com/mikeshub/FUTABA_SBUS/tree/master/FUTABA_SBUS
+
+The example convert elrs reciver to USB HID via serial. 
+
+Used for simulator, tested on velocity drone/Tinywhoop Go/VRC Pro, and on Skydievr (android version use otg)
+
+Due to the hardware limitation, the receiver need to work at 115200 baud rate (Default is 420k), the latest elrs configrator support customer baud rate.
+
+The library could be work independly for other usage.
 
 
