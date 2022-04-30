@@ -262,11 +262,15 @@ void CRSF::GetCrsfPacket(void){
           inBuffer[bufferIndex++] = inData;
       }else if(bufferIndex == frameLength + 1){
         //calculate received packet crc
-        uint8_t inCrc=inBuffer[CRSF_FRAME_LENGTH-1];
+        inBuffer[bufferIndex++] = inData;
+        //uint8_t inCrc=inBuffer[CRSF_FRAME_LENGTH-1];
         uint8_t crc=crsf_crc8(&inBuffer[2],inBuffer[1]-1);
+        inBuffer[24]=crc;
         //If crc is correct copy buffer data to crsfData
         if( frameLength==CRSF_FRAME_LENGTH && inBuffer[0]== CRSF_ADDRESS_FLIGHT_CONTROLLER){
-          memcpy(crsfData,inBuffer,CRSF_PACKET_SIZE);
+          if(crc == inBuffer[25]){
+            memcpy(crsfData,inBuffer,CRSF_PACKET_SIZE);
+          }
         }
         bufferIndex = 0;
       }
