@@ -6,7 +6,7 @@ https://github.com/mikeshub/FUTABA_SBUS/tree/master/FUTABA_SBUS
 
 The example convert elrs reciver to USB HID via serial use this library:
 
-//https://github.com/MHeironimus/ArduinoJoystickLibrary
+https://github.com/MHeironimus/ArduinoJoystickLibrary
 
 Used for simulator, tested on velocity drone/Tinywhoop Go/VRC Pro, and on Skydievr (android version use otg)
 
