@@ -1,23 +1,20 @@
 #include "CRSF.h"
+//CRSF decode from SBUS decoder https://github.com/mikeshub/FUTABA_SBUS/tree/master/FUTABA_SBUS
 
 void CRSF::begin(){
 	uint8_t loc_crsfData[CRSF_PACKET_SIZE] = {
 	  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 	int16_t loc_channels[16]  = {
 	  		1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023};
-	int16_t loc_servos[16]    = {
-  			1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023};
   	port.begin(SERIAL_BAUDRATE);
 
   //initial data;
 	memcpy(crsfData,loc_crsfData,CRSF_PACKET_SIZE);
 	memcpy(channels,loc_channels,CRSF_MAX_CHANNEL);
-	failsafe_status = CRSF_SIGNAL_OK;
 	crsf_passthrough = 1;
 	toChannels = 0;
 	bufferIndex = 0;
 	feedState = 0;
-  isDataFrame = 0;
 
 }
 
@@ -30,100 +27,8 @@ int16_t CRSF::Channel(uint8_t ch) {
     return CRSF_CHANNEL_MID;
   }
 }
-/*
-uint8_t CRSF::DigiChannel(uint8_t ch) {
-  // Read digital channel data
-  if ((ch>0) && (ch<=2)) {
-    return channels[15+ch];
-  }
-  else{
-    return 0;
-  }
-}
-void CRSF::Servo(uint8_t ch, int16_t position) {
-  // Set servo position
-  if ((ch>0)&&(ch<=16)) {
-    if (position>2048) {
-      position=2048;
-    }
-    servos[ch-1] = position;
-  }
-}
-void CRSF::DigiServo(uint8_t ch, uint8_t position) {
-  // Set digital servo position
-  if ((ch>0) && (ch<=2)) {
-    if (position>1) {
-      position=1;
-    }
-    servos[15+ch] = position;
-  }
-}
-*/
-uint8_t CRSF::Failsafe(void) {
-  return failsafe_status;
-}
-
-void CRSF::PassthroughSet(int mode) {
-  // Set passtrough mode, if true, received channel data is send to servos
-  crsf_passthrough = mode;
-}
-
-int CRSF::PassthroughRet(void) {
-  // Return current passthrough mode
-  return crsf_passthrough;
-}
-void CRSF::UpdateServos(void) {
-  // Send data to servos
-  // Passtrough mode = false >> send own servo data
-  // Passtrough mode = true >> send received channel data
-  uint8_t i;
-  if (crsf_passthrough==0) {
-    // clear received channel data
-    for (i=1; i<24; i++) {
-      crsfData[i] = 0;
-    }
-
-    // reset counters
-    ch = 0;
-    bit_in_servo = 0;
-    byte_in_crsf = 1;
-    bit_in_crsf = 0;
-
-    // store servo data
-    for (i=0; i<176; i++) {
-      if (servos[ch] & (1<<bit_in_servo)) {
-        crsfData[byte_in_crsf] |= (1<<bit_in_crsf);
-      }
-      bit_in_crsf++;
-      bit_in_servo++;
-
-      if (bit_in_crsf == 8) {
-        bit_in_crsf =0;
-        byte_in_crsf++;
-      }
-      if (bit_in_servo == 11) {
-        bit_in_servo =0;
-        ch++;
-      }
-    }
 
 
-    // Failsafe
-    if (failsafe_status == CRSF_SIGNAL_LOST) {
-      crsfData[23] |= (1<<2);
-    }
-
-    if (failsafe_status == CRSF_SIGNAL_FAILSAFE) {
-      crsfData[23] |= (1<<2);
-      crsfData[23] |= (1<<3);
-    }
-  }
-  // send data out
-  //serialPort.write(crsfData,25);
-  for (i=0;i<25;i++) {
-    port.write(crsfData[i]);
-  }
-}
 void CRSF::UpdateChannels(void) {
   //uint8_t i;
   //uint8_t crsf_pointer = 0;
@@ -178,44 +83,6 @@ void CRSF::UpdateChannels(void) {
 
 }
 
-void CRSF::FeedLine(void){
-  if (port.available() > 26){
-    while(port.available() > 0){
-      inData = port.read();
-      //currentMicros = micros();
-      switch (feedState){
-      case 0:
-        if (inData != 0xC8){
-          while(port.available() > 0){//read the contents of in buffer this should resync the transmission
-            inData = port.read();
-          }
-          return;
-        }
-        else{
-          bufferIndex = 0;
-          inBuffer[bufferIndex] = inData;
-          //inBuffer[26] = 0xff;
-          feedState = 1;
-        }
-        break;
-      case 1:
-        bufferIndex ++;
-        inBuffer[bufferIndex] = inData;
-        if (bufferIndex < 26 && port.available() == 0){
-          feedState = 0;
-        }
-        if (bufferIndex == 26){
-          feedState = 0;
-          if (inBuffer[0]==0xC8){
-            memcpy(crsfData,inBuffer,26);
-            toChannels = 1;
-          }
-        }
-        break;
-      }
-    }
-  }
-}
 
 //Crc8 _crc;
 		static uint8_t crsf_crc8tab[256] = {
@@ -274,43 +141,13 @@ void CRSF::GetCrsfPacket(void){
         }
         bufferIndex = 0;
       }
-         // inBuffer[25]=port.available();
+       // inBuffer[25]=port.available();
 
     }
 
-     /* if(bufferIndex==0 && inData!=CRSF_ADDRESS_FLIGHT_CONTROLLER)
-        continue;
-      inBuffer[bufferIndex++] = inData;
-      if (inBuffer[1]==0x18){
-
-   
-
-      if(bufferIndex==CRSF_PACKET_SIZE-1){
-        uint8_t inCrc=inBuffer[CRSF_PACKET_SIZE-1];
-        uint8_t crc=crsf_crc8(&inBuffer[2],CRSF_PACKET_SIZE-3);
-
-        //if( inBuffer[0]==CRSF_ADDRESS_FLIGHT_CONTROLLER  ){
-          memcpy(crsfData,inBuffer,26);
-        //}
-      bufferIndex=0 ;
-         }
-         else{
-           bufferIndex=0 ;
-         }
-
-      }*/
    
 }
 
-
-void CRSF::CheckPacketTimeout(){
-  if ( micros() - currentMicros > CRSF_PACKET_TIMEOUT_US){
-    failsafe_status = CRSF_SIGNAL_LOST;
-  }else{
-    failsafe_status = CRSF_SIGNAL_OK;
-  }
-  return failsafe_status;
-}
 
 
 
