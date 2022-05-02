@@ -3,8 +3,8 @@
 #ifndef CRSF_h
 #define CRSF_h
 
-//#define CRSF_SIGNAL_OK          0x00
-//#define CRSF_SIGNAL_LOST        0x01
+#define CRSF_SIGNAL_OK          0x00
+#define CRSF_SIGNAL_LOST        0x01
 //#define CRSF_SIGNAL_FAILSAFE    0x03
 #define port Serial1
 
@@ -73,7 +73,7 @@ class CRSF
 		uint8_t inBuffer[CRSF_PACKET_SIZE];
 		uint8_t crsfData[CRSF_PACKET_SIZE];
 		int16_t channels[CRSF_MAX_CHANNEL];
-		uint8_t  failsafe_status;
+		uint8_t failsafe_status;
 		uint8_t frameLenth;
 		int crsf_passthrough;
 		int toChannels;

@@ -62,7 +62,7 @@ void CRSF::UpdateChannels(void) {
   }*/
   //if(channels[25]==crsf_crc8(&channels[2], CRSF_PACKET_SIZE-3)){
   //  failsafe_status = CRSF_SIGNAL_OK;
-
+  if(crsfData[1] == 24){
     channels[0]  = ((crsfData[3]|crsfData[4]<< 8) & 0x07FF);
     channels[1]  = ((crsfData[4]>>3|crsfData[5]<<5) & 0x07FF);
     channels[2]  = ((crsfData[5]>>6|crsfData[6]<<2|crsfData[7]<<10) & 0x07FF);
@@ -79,7 +79,7 @@ void CRSF::UpdateChannels(void) {
     channels[13] = ((crsfData[20]>>7|crsfData[21]<<1|crsfData[22]<<9) & 0x07FF);
     channels[14] = ((crsfData[22]>>2|crsfData[23]<<6) & 0x07FF);
     channels[15] = ((crsfData[23]>>5|crsfData[24]<<3) & 0x07FF);
-  //}
+  }
 
 }
 
@@ -137,6 +137,9 @@ void CRSF::GetCrsfPacket(void){
         if( frameLength==CRSF_FRAME_LENGTH && inBuffer[0]== CRSF_ADDRESS_FLIGHT_CONTROLLER){
           if(crc == inBuffer[25]){
             memcpy(crsfData,inBuffer,CRSF_PACKET_SIZE);
+            failsafe_status = CRSF_SIGNAL_OK;
+          }else{
+            failsafe_status = CRSF_SIGNAL_LOST;
           }
         }
         bufferIndex = 0;

@@ -4,6 +4,7 @@
 #include <Joystick.h>
 //https://github.com/MHeironimus/ArduinoJoystickLibrary
 
+//#define DEBUG // if not commented out, Serial.print() is active! For debugging only!!
 
 // twelve servo objects can be created on most boards
 //Joystick_ Joystick;
@@ -18,11 +19,23 @@ const bool testAutoSendMode = false;
 #define FRESH_TIME_US 4000  // Update every 4ms
 unsigned long int currentMicros = 0;
 
+int packetPerSec;
+unsigned long int currentMillis;
+
+#define SECOND 1000
+
+
 CRSF crsf;
 
 void setup(){
   crsf.begin();
- // Serial.begin(115200);
+
+  #ifdef DEBUG
+    Serial.begin(115200);
+    packetPerSec = 0;
+    currentMillis = 0;
+  #endif
+
   Joystick.setXAxisRange(CRSF_CHANNEL_MIN,CRSF_CHANNEL_MAX);
   Joystick.setYAxisRange(CRSF_CHANNEL_MIN,CRSF_CHANNEL_MAX);
   Joystick.setZAxisRange(CRSF_CHANNEL_MIN,CRSF_CHANNEL_MAX);
@@ -46,9 +59,16 @@ void loop(){
   
   if (micros() - currentMicros >= FRESH_TIME_US) {
     crsf.GetCrsfPacket();
-    if(crsf.crsfData[1]==24){ //data packet
+    //if(crsf.crsfData[1]==24){ //data packet
+      #ifdef DEBUG
+        packetPerSec++;
+      #endif
       // Turn indicator light on.
-      digitalWrite(LED_BUILTIN, 1);
+      if(crsf.failsafe_status == 0){
+        digitalWrite(LED_BUILTIN, 1);
+      }else{
+        digitalWrite(LED_BUILTIN, 0);
+      }
       crsf.UpdateChannels();
       Joystick.setXAxis(crsf.channels[0]);
       Joystick.setYAxis(crsf.channels[1]);
@@ -56,25 +76,31 @@ void loop(){
       Joystick.setRxAxis(crsf.channels[3]);
       Joystick.setRyAxis(crsf.channels[4]);
       Joystick.setRzAxis(crsf.channels[5]);
-  }
-  else{
-     digitalWrite(LED_BUILTIN, 0);
-  }
-    if (testAutoSendMode == false)
-    {
- 
-    }
+ // }
+
+
     currentMicros = micros();
     Joystick.sendState();
   }
 
+
+  #ifdef DEBUG
+    if(millis()-currentMillis > SECOND ){
+      Serial.println(packetPerSec); 
+      currentMillis=millis();
+      packetPerSec=0;
+    }
+    //Serial.print(crsf.channels[0]); 
     //Serial.print(crsf.channels[0]); 
     //Serial.print(crsf.channels[1]); 
     //Serial.print(crsf.channels[2]); 
     //Serial.println();
-    //Serial<<crsf.channels[0]<<","<<crsf.channels[1]<<","<<crsf.channels[2]<<","<<crsf.channels[3]<<"\r\n";
+    Serial<<crsf.channels[0]<<","<<crsf.channels[1]<<","<<crsf.channels[2]<<","<<crsf.channels[3]<<"\r\n";
    // Serial<<crsf.crsfData[0]<<","<<crsf.crsfData[1]<<","<<crsf.crsfData[2]<<","<<crsf.crsfData[3]<<"\r\n";
    // Serial<<crsf.channels[0]<<","<<crsf.channels[1]<<","<<crsf.channels[2]<<","<<crsf.channels[3]<<","<<crsf.inBuffer[4]<<","<<crsf.inBuffer[5]<<","<<crsf.inBuffer[24]<<","<<crsf.inBuffer[25]<<"\r\n";
     //Serial.println(startMillis);
-//    Serial.println(crsf.GetBufferIndex());
+    //Serial.println(crsf.GetBufferIndex());
+  #endif
+
+  
 }
