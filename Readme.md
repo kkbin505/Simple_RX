@@ -10,6 +10,9 @@ https://github.com/MHeironimus/ArduinoJoystickLibrary
 
 Could modify for other usage (output pwm to drive servo)
 
+There is a better impementation of crsf lib, check out :
+
+https://github.com/CapnBry/CRServoF
 
 
 Used for simulator, tested on velocity drone/Tinywhoop Go/VRC Pro, and on Skydievr (android version use otg)
@@ -39,9 +42,7 @@ The library could be work independly for other usage.
 ![微信图片_20220427230109](https://user-images.githubusercontent.com/43392862/166093331-778e0137-e148-4e79-9ff4-059480c27bcf.jpg)
 
 
-There is a better impementation of crsf lib, check out :
 
-https://github.com/CapnBry/CRServoF
 
 
 
