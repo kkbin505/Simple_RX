@@ -1,0 +1,5 @@
+{
+    "board": "arduino:avr:leonardo",
+    "port": "COM23",
+    "sketch": "crsf_decode_hid\\crsf_decode_hid.ino"
+}
