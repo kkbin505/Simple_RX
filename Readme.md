@@ -17,6 +17,18 @@ https://github.com/CapnBry/CRServoF
 
 Used for simulator, tested on velocity drone/Tinywhoop Go/VRC Pro, and on Skydievr (android version use otg)
 
+### Update 2022/07/13
+
+Add PWM and PPM support
+
+Uncomment define to select protocol:
+
+#define CRSF_TO_USBHID
+
+//#define PWM_TO_USBHID
+
+//#define PPM_TO_USBHID
+
 ### Wiring
 
 ELRS receiver  -  Arduino Pro Micro
@@ -38,6 +50,26 @@ Due to the hardware limitation, the receiver need to work at 115200 baud rate (D
 
 The library could be work independly for other usage.
 
+
+PWM receiver - Arduino Pro Micro
+
+5v  -> 5v
+
+GND -> GND
+
+Channel 1  -> TX (D0)
+
+Channel 2  -> RX (D1)
+
+Channel 3  -> D2
+
+Channel 4  -> D3
+
+PPM receiver - Arduino Pro Micro
+
+GND -> GND
+
+Siginal  -> D3
 
 ![微信图片_20220427230109](https://user-images.githubusercontent.com/43392862/166093331-778e0137-e148-4e79-9ff4-059480c27bcf.jpg)
 
