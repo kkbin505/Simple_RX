@@ -25,9 +25,14 @@
   4.debug mode
   */
 //#define CRSF_TO_USBHID
-#define PWM_TO_USBHID
-//#define PPM_TO_USBHID
-//#define DEBUG // if not commented out, Serial.print() is active! For debugging only!!
+//#define PWM_TO_USBHID
+#define PPM_TO_USBHID
+#define DEBUG // if not commented out, Serial.print() is active! For debugging only!!
+
+//define pwm channel range
+#define PWM_CHANNEL_MIN 1000
+#define PWM_CHANNEL_MID 1500
+#define PWM_CHANNEL_MAX 2000
 
 //Joystick_ Joystick;
 Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_GAMEPAD,
@@ -41,7 +46,7 @@ const bool testAutoSendMode = false;
 #define FRESH_TIME_US 3000  // Update  joystick data every 1ms give enougth time for crsf frame decode
 unsigned long int currentMicros = 0;
 
-// channel data
+// channel data max 8 channel for crsf and ppm
 int channelData[8];
 //We create variables for the time width values of each PWM input signal (only support 4 channel, if more channel was needed, highly recommand use ppm or crsf receiver)
 unsigned long counter_1, counter_2, counter_3, counter_4, current_count;
@@ -65,14 +70,13 @@ uint8_t pulse_time = 0;
 #endif
 
 #ifdef PWM_TO_USBHID
-  //uint8_t pwmChannelPin1 = 2;
-#endif
-
-//PWM pin define
-// D0 - TX
-// D1 - RX
-// D2 - D2
-// D3 - D3
+  //PWM pin define arduino pro micro
+  // D0 - TX
+  // D1 - RX
+  // D2 - D2
+  // D3 - D3
+  // 5V - 5V
+  // GND - GND
   #define CHAN1 D,0
   #define _INT1 0
   #define CHAN2 D,1
@@ -86,10 +90,19 @@ uint8_t pulse_time = 0;
   volatile bool ValChanged[4];
   unsigned int NewValue[4];
 
+#endif
+
+
 #ifdef PPM_TO_USBHID
+  //PPM pin define arduino pro micro
+  // D3 - sinal
+  // GND - GND
   PPMReader ppmReader(3, 0, false);
 #endif
 
+#ifdef DEBUG
+  unsigned long int serialPrintMillis;
+#endif 
 /*
 void calcSignal() 
 {
@@ -116,6 +129,8 @@ void calcSignal()
 */
 
 void setup(){
+
+  currentMillis = 0;
   
   #ifdef CRSF_TO_USBHID
     crsf.begin();
@@ -137,15 +152,21 @@ void setup(){
 
   #endif
 
-  #ifdef PPM_TO_USBHID
-    //Add code here
-  #endif
+  //#ifdef PPM_TO_USBHID
+    //no need to add code here
+  //#endif
 
   #ifdef DEBUG
     Serial.begin(115200);
     packetPerSec = 0;
-    currentMillis = 0;
+    serialPrintMillis = 0;
   #endif
+
+  //inital channel data
+  for (int i=0; i<8; i++) {
+      channelData[i]=PWM_CHANNEL_MID;
+  }
+
 
   Joystick.setXAxisRange(CRSF_CHANNEL_MIN,CRSF_CHANNEL_MAX);
   Joystick.setYAxisRange(CRSF_CHANNEL_MIN,CRSF_CHANNEL_MAX);
@@ -193,21 +214,21 @@ void loop(){
       if (ValChanged[0])
         {
           NewValue[0] = (NewValue[0]+Value[0])/2;
-          channelData[0] = map(NewValue[0],1000, 2000, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
+          channelData[0] = map(NewValue[0],PWM_CHANNEL_MIN, PWM_CHANNEL_MAX, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
           ValChanged[0] = false;
         }
 
         if (ValChanged[1])
         {
           NewValue[1] = (NewValue[1]+Value[1])/2;
-          channelData[1] = map(NewValue[1],1000, 2000, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
+          channelData[1] = map(NewValue[1],PWM_CHANNEL_MIN, PWM_CHANNEL_MAX, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
           ValChanged[1] = false;
         }
         
         if (ValChanged[2])
         {
           NewValue[2] = (NewValue[2]+Value[2])/2;
-          channelData[2] = map(NewValue[2],1000, 2000, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
+          channelData[2] = map(NewValue[2],PWM_CHANNEL_MIN, PWM_CHANNEL_MAX, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
           //channelData[2] = CRSF_CHANNEL_MID;
           ValChanged[2] = false;
         }
@@ -215,7 +236,7 @@ void loop(){
         if (ValChanged[3])
         {
           NewValue[3] = (NewValue[3]+Value[3])/2;
-          channelData[3] = map(NewValue[3],1000, 2000, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
+          channelData[3] = map(NewValue[3],PWM_CHANNEL_MIN, PWM_CHANNEL_MAX, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
           //channelData[3] = CRSF_CHANNEL_MID;
           ValChanged[3] = false;
         }
@@ -227,7 +248,7 @@ void loop(){
         int count = 0;
         while(ppmReader.get(count)!=0){
           int value = ppmReader.get(count);
-          channelData[count] = map(value, 1000, 2000, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
+          channelData[count] = map(value, PWM_CHANNEL_MIN, PWM_CHANNEL_MAX, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
           count++;
         }
         count = 0;
@@ -251,64 +272,19 @@ void loop(){
 
 
   #ifdef DEBUG
-    if(millis()-currentMillis > SECOND ){
-      Serial.println(packetPerSec); 
-      currentMillis=millis();
-      packetPerSec=0;
+    //if(millis()-currentMillis > SECOND ){
+      //Serial.println(packetPerSec); 
+    //  currentMillis=millis();
+    //  packetPerSec=0;
+   // }
+    if (micros() - serialPrintMillis >= 20000) {
+      Serial<<channelData[0]<<" - "<<channelData[1]<<" - "<<channelData[2]<<" - "<<channelData[3]<<" - "<<channelData[4]<<" - "<<channelData[5]<<" - "<<channelData[6]<<" - "<<channelData[7]<<"\r\n";
+      serialPrintMillis = micros();
     }
-    //Serial.print(crsf.channels[0]); 
-    //Serial.print(crsf.channels[0]); 
-    //Serial.print(crsf.channels[1]); 
-    //Serial.print(crsf.channels[2]); 
-    //Serial.println();
-          //Serial.println("hello");
-    Serial<<channelData[0]<<","<<channelData[1]<<","<<channelData[2]<<","<<channelData[3]<<"\r\n";
-    //Serial<<crsf.channels[0]<<","<<crsf.channels[1]<<","<<crsf.channels[2]<<","<<crsf.channels[3]<<"\r\n";
-   // Serial<<crsf.crsfData[0]<<","<<crsf.crsfData[1]<<","<<crsf.crsfData[2]<<","<<crsf.crsfData[3]<<"\r\n";
-   // Serial<<crsf.channels[0]<<","<<crsf.channels[1]<<","<<crsf.channels[2]<<","<<crsf.channels[3]<<","<<crsf.inBuffer[4]<<","<<crsf.inBuffer[5]<<","<<crsf.inBuffer[24]<<","<<crsf.inBuffer[25]<<"\r\n";
-    //Serial.println(startMillis);
-    //Serial.println(crsf.GetBufferIndex());
   #endif
 
   
 }
-
-
-//This is the interruption routine fro PPM
-//----------------------------------------------
-/*
-ISR(PCINT0_vect){
-//First we take the current count value in micro seconds using the micros() function
-  
-  current_count = micros();
-  ///////////////////////////////////////Channel 1    pin D8 -- B00000001
-  if(PINB & B00100000){                              //We make an AND with the pin state register, We verify if pin 8 is HIGH???
-    if(last_CH1_state == 0){                         //If the last state was 0, then we have a state change...
-      last_CH1_state = 1;                            //Store the current state into the last state for the next loop
-      counter_1 = current_count;                     //Set counter_1 to current value.
-    }
-  }
-  else if(last_CH1_state == 1){                      //If pin 8 is LOW and the last state was HIGH then we have a state change  ISR 
-    last_CH1_state = 0;                              //Store the current state into the last state for the next loop
-    channelData[0] = current_count - counter_1;      //We make the time difference. Channel 1 is current_time - timer_1.
-  }
-
-
-
-  ///////////////////////////////////////Channel 2
-  if(PINB & B01000000 ){                             //pin D9 -- B00000010                                              
-    if(last_CH2_state == 0){                                               
-      last_CH2_state = 1;                                                   
-      counter_2 = current_count;                                             
-    }
-  }
-  else if(last_CH2_state == 1){                                           
-    last_CH2_state = 0;                                                     
-    channelData[1] = current_count - counter_2;                             
-  }
-
-}
- */
 
 
 //This is the interruption routine fro PWM
