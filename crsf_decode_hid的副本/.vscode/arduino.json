@@ -1,0 +1,5 @@
+{
+    "board": "arduino:avr:leonardo",
+    "sketch": "crsf_decode_hid.ino",
+    "port": "/dev/tty.usbmodemHIDFC1"
+}

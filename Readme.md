@@ -57,13 +57,13 @@ PWM receiver - Arduino Pro Micro
 
 GND -> GND
 
-Channel 1  -> TX (D0)
+Channel 1  -> SCL D0
 
-Channel 2  -> RX (D1)
+Channel 2  -> SDA D1
 
-Channel 3  -> D2
+Channel 3  -> RX  D2
 
-Channel 4  -> D3
+Channel 4  -> TX  D3
 
 PPM receiver - Arduino Pro Micro
 
